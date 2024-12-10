@@ -121,9 +121,9 @@ class DataCreator:
 
         self.train, self.test, self.sc = self.scale(self.train, self.test)
 
-        self.train_sequences = self.create_sequences(self.train, target_column = "Close", sequence_length = seq_len)
-        self.val_sequences = self.create_sequences(self.test, target_column = "Close",sequence_length = seq_len)
-        
+        self.train_sequences = self.create_sequences(self.train, target_column = tc, sequence_length = seq_len)
+        self.val_sequences = self.create_sequences(self.test, target_column = tc ,sequence_length = seq_len)
+
         return self.train_sequences, self.val_sequences
 
     def plot_split_data(self, target_column: str = "Close"):
