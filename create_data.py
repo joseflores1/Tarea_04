@@ -106,7 +106,7 @@ class DataCreator:
 
         return train_sc, test_sc, sc
     
-    def inverse_scale(self, predictions: list, dataframe, target_column = "Close") -> list:
+    def inverse_scale(self, predictions: list, target_column = "Close") -> list:
         """
         Desescala una lista de tensores de predicciones a sus valores originales.
         
@@ -116,8 +116,8 @@ class DataCreator:
         Retorna:
             descaled_values (list): Lista continua de valores desescalados.
         """
-        max_value = dataframe[target_column].max()
-        min_value = dataframe[target_column].min()
+        max_value = self.descaled_train[target_column].max()
+        min_value = self.descaled_train[target_column].min()
 
         # Convertir el tensor de predicciones a un array NumPy
         predictions_numpy = predictions.squeeze(1).numpy()  # Quitar la dimensión extra y mover a CPU
