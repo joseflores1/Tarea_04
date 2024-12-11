@@ -4,6 +4,7 @@ from sklearn.preprocessing import MinMaxScaler
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import torch
 
 class DataCreator:
     def __init__(self, path: str, date_cols: str, cols_to_drop: list[str]) -> pd.DataFrame:
@@ -19,8 +20,7 @@ class DataCreator:
         df["Hour"] = df["Date"].dt.hour
         df["Minute"] = df["Date"].dt.minute
         df["Second"] = df["Date"].dt.second
-        ## ADDED
-        df["weekday"] = df["Date"].dt.weekday
+
 
         df.drop(columns = ["Date"],inplace = True)
         return df
@@ -106,19 +106,36 @@ class DataCreator:
 
         return train_sc, test_sc, sc
     
-    def inverse_scale(self, data: np.array):
+    def inverse_scale(self, predictions: list, dataframe, target_column = "Close") -> list:
+        """
+        Desescala una lista de tensores de predicciones a sus valores originales.
+        
+        Parámetros:
+            predictions (list): Lista de tensores con predicciones escaladas de dimensiones [batch_size, 1].
+        
+        Retorna:
+            descaled_values (list): Lista continua de valores desescalados.
+        """
+        max_value = dataframe[target_column].max()
+        min_value = dataframe[target_column].min()
 
-        return data * self.sc.scale_[self.idx] + self.sc.min_[self.idx]
+        # Convertir el tensor de predicciones a un array NumPy
+        predictions_numpy = predictions.squeeze(1).numpy()  # Quitar la dimensión extra y mover a CPU
 
-    def run(self, month, seq_len, tc = "Close", plot: bool = False) :
+        # Aplicar la fórmula de desescalado
+        descaled_values = predictions_numpy * (max_value - min_value) + min_value
+
+        return descaled_values.tolist()
+
+
+    def run(self, month, seq_len, tc = "Close") :
+        
         df = self.create_variables(self.df)
         self.train, self.test = self.split_data(df, month = month)
+
+        self.descaled_train = self.train.copy()
+        self.descaled_test = self.test.copy()
         
-        self.idx = self.train.columns.tolist().index(tc)
-
-        if plot:
-            self.plot_split_data(target_column = tc)
-
         self.train, self.test, self.sc = self.scale(self.train, self.test)
 
         self.train_sequences = self.create_sequences(self.train, target_column = tc, sequence_length = seq_len)
@@ -126,21 +143,43 @@ class DataCreator:
 
         return self.train_sequences, self.val_sequences
 
-    def plot_split_data(self, target_column: str = "Close"):
+    def plot_split_data(self, target_column: str = "Close", train_preds: list = None, test_preds: list = None):
         """
-        Grafica los datos de entrenamiento y validación en un único gráfico.
+        Grafica los datos de entrenamiento, validación y, opcionalmente, las predicciones.
+
+        Parámetros:
+            target_column (str): Nombre de la columna objetivo.
+            train_preds (list): Predicciones desescaladas del conjunto de entrenamiento (opcional).
+            test_preds (list): Predicciones desescaladas del conjunto de validación (opcional).
         """
         # Crear el gráfico
         plt.figure(figsize = (15, 6))
 
         # Graficar datos de entrenamiento
-        plt.plot(self.train.index, self.train[target_column], label = f"Train ({target_column})", color = "blue", alpha = 0.7)
+        plt.plot(self.descaled_train.index, self.descaled_train[target_column], 
+                label = f"Train ({target_column})", color = "blue", alpha = 0.7)
 
         # Graficar datos de validación
-        plt.plot(self.test.index, self.test[target_column], label = f"Validation ({target_column})", color = "orange", alpha = 0.7)
+        plt.plot(self.descaled_test.index, self.descaled_test[target_column], 
+                label = f"Validation ({target_column})", color = "orange", alpha = 0.7)
+
+        # Agregar predicciones de entrenamiento
+        if train_preds is not None:
+            start_idx_train = 120  # Índice inicial de las predicciones de entrenamiento
+            train_pred_indices = range(start_idx_train, start_idx_train + len(train_preds))  # Índices
+            plt.plot(train_pred_indices, train_preds, 
+                    label = "Train Predictions", color = "green", linestyle = "--", alpha = 0.7)
+
+        # Agregar predicciones de validación
+        if test_preds is not None:
+            # Índice inicial de las predicciones de validación (fin de train + 121)
+            start_idx_test = self.descaled_train.index[-1] + 121
+            test_pred_indices = range(start_idx_test, start_idx_test + len(test_preds))  # Índices
+            plt.plot(test_pred_indices, test_preds, 
+                    label = "Validation Predictions", color = "red", linestyle="--", alpha = 0.7)
 
         # Configuración del gráfico
-        plt.title(f"Comportamiento del Bitcoin ({target_column})")
+        plt.title(f"Comportamiento del Bitcoin ({target_column}) y Predicciones")
         plt.xlabel("Índice temporal")
         plt.ylabel(f"Valor de {target_column}")
         plt.legend()
