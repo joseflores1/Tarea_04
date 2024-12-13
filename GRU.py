@@ -162,8 +162,8 @@ class Seq2SeqGRU(nn.Module):
 
 if __name__ == "__main__":
     # Dimensiones
-    input_size = 10000
-    output_size = 1000
+    input_size = 10003
+    output_size = 1002
     embedding_dim = 256
     hidden_size = 512
     num_layers = 2
