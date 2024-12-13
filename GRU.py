@@ -98,6 +98,7 @@ class Seq2SeqGRU(nn.Module):
 
 
 if __name__ == "__main__":
+    
     input_size = 10000
     output_size = 1000
     embedding_dim = 256
