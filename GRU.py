@@ -3,7 +3,7 @@ import torch.nn as nn
 from torchinfo import summary
 
 class EncoderGRU(nn.Module):
-    def __init__(self, input_size: int, embedding_dim: int, hidden_size: int, num_layers: int, dropout: int = 0.2) -> None:
+    def __init__(self, input_size: int, embedding_dim: int, hidden_size: int, num_layers: int, dropout: int = 0.3) -> None:
         """
         Encoder basado en GRU con soporte para múltiples capas.
 
@@ -36,16 +36,16 @@ class EncoderGRU(nn.Module):
         outputs, hidden = self.gru(embedded)
 
         if self.print_shapes:
-            # print(f"\nEncoder - Input shape: {x.shape}")
-            # print(f"Encoder - Embedded shape: {embedded.shape}")
-            # print(f"Encoder - Outputs shape: {outputs.shape}")
-            # print(f"Encoder - Hidden shape: {hidden.shape}\n")
+            print(f"\nEncoder - Input shape: {x.shape}")
+            print(f"Encoder - Embedded shape: {embedded.shape}")
+            print(f"Encoder - Outputs shape: {outputs.shape}")
+            print(f"Encoder - Hidden shape: {hidden.shape}\n")
             self.print_shapes = False
         return outputs, hidden
 
 
 class DecoderGRU(nn.Module):
-    def __init__(self, output_size: int, embedding_dim: int, hidden_size: int, num_layers: int, dropout: int = 0.2):
+    def __init__(self, output_size: int, embedding_dim: int, hidden_size: int, num_layers: int, dropout: int = 0.3):
         """
         Decoder basado en GRU con soporte para múltiples capas.
 
@@ -81,10 +81,10 @@ class DecoderGRU(nn.Module):
         outputs = self.fc(outputs[:, -1, :])
 
         if self.print_shapes:
-            # print(f"\nDecoder - Input shape: {x.shape}")
-            # print(f"Decoder - Embedded shape: {embedded.shape}")
-            # print(f"Decoder - Outputs shape (después de proyección): {outputs.shape}")
-            # print(f"Decoder - Hidden shape: {hidden.shape}\n")
+            print(f"\nDecoder - Input shape: {x.shape}")
+            print(f"Decoder - Embedded shape: {embedded.shape}")
+            print(f"Decoder - Outputs shape (después de proyección): {outputs.shape}")
+            print(f"Decoder - Hidden shape: {hidden.shape}\n")
             self.print_shapes = False
         return outputs, hidden
 
@@ -162,15 +162,15 @@ class Seq2SeqGRU(nn.Module):
 
 if __name__ == "__main__":
     # Dimensiones
-    input_size = 10003
-    output_size = 1002
+    input_size = 10000 + 3
+    output_size = 1000 + 2
     embedding_dim = 256
     hidden_size = 512
     num_layers = 2
     batch_size = 3
     src_length = 6
     trg_length = 6
-    dropout = 0.2
+    dropout = 0.3
 
     # Inicializar Encoder, Decoder y modelo Seq2Seq
     encoder = EncoderGRU(input_size, embedding_dim, hidden_size, num_layers, dropout)
@@ -187,17 +187,17 @@ if __name__ == "__main__":
     # Entrenamiento
     # print("\n--- Entrenamiento ---\n")
     outputs_train = model(src, trg, train = True)
-    # print("Dimensión final de las predicciones (entrenamiento):", outputs_train.shape)
-
+  
+    print("Dimensión final de las predicciones (entrenamiento):", outputs_train.shape)
     # Validación
     # print("\n--- Validación ---\n")
     outputs_val = model(src, trg, train = False)
-    # print("Dimensión final de las predicciones (validación):", outputs_val.shape)
+    print("Dimensión final de las predicciones (validación):", outputs_val.shape)
 
     # Prueba
     # print("\n--- Prueba ---\n")
     outputs_test = model(src, train = False)
-    # print("Dimensión final de las predicciones (prueba):", outputs_test.shape)
+    print("Dimensión final de las predicciones (prueba):", outputs_test.shape)
 
     # Mostrar detalles del modelo con torchinfo
     summary(
