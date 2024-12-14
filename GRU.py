@@ -177,25 +177,22 @@ if __name__ == "__main__":
     decoder = DecoderGRU(output_size, embedding_dim, hidden_size, num_layers, dropout)
     model = Seq2SeqGRU(encoder, decoder)
 
-    # Mostrar parámetros del modelo
-    model.count_parameters()
-
     # Dummy data
     src = torch.randint(0, input_size, (batch_size, src_length))
     trg = torch.randint(0, output_size, (batch_size, trg_length))
 
     # Entrenamiento
-    # print("\n--- Entrenamiento ---\n")
+    print("\n--- Entrenamiento ---\n")
     outputs_train = model(src, trg, train = True)
   
     print("Dimensión final de las predicciones (entrenamiento):", outputs_train.shape)
     # Validación
-    # print("\n--- Validación ---\n")
+    print("\n--- Validación ---\n")
     outputs_val = model(src, trg, train = False)
     print("Dimensión final de las predicciones (validación):", outputs_val.shape)
 
     # Prueba
-    # print("\n--- Prueba ---\n")
+    print("\n--- Prueba ---\n")
     outputs_test = model(src, train = False)
     print("Dimensión final de las predicciones (prueba):", outputs_test.shape)
 
@@ -206,3 +203,6 @@ if __name__ == "__main__":
         col_names = ["input_size", "output_size", "num_params", "trainable"],
         dtypes = [torch.int64, torch.int64, torch.bool],
     )
+
+    # Mostrar parámetros del modelo
+    model.count_parameters()
